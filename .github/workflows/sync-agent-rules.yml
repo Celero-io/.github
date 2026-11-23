@@ -1,0 +1,19 @@
+name: Sync agent rules
+on:
+  push:
+    branches: [master]
+    paths: ["agents/RULES.md", "agents/repos.txt", "agents/sync.sh"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Open sync PRs in every repo
+        env:
+          GH_TOKEN: ${{ secrets.AGENT_RULES_SYNC_TOKEN }}
+        run: |
+          if [ -z "$GH_TOKEN" ]; then echo "AGENT_RULES_SYNC_TOKEN is not set (see agents/README.md)"; exit 1; fi
+          bash agents/sync.sh
