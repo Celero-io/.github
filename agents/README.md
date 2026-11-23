@@ -1,26 +1,29 @@
 # Shared rules for AI coding agents
 
-`RULES.md` is the single source of the rules every AI agent (Claude Code, Cursor, Codex) follows in
-Celero repos: the git/PR process, and the security rules learned from Oneleet checks and the pentest.
-
-Agents only read files inside the repo they work in, so the rules are copied into each repo's
-`AGENTS.md` (and `CLAUDE.md` = `@AGENTS.md`) by `sync.sh`, always through a pull request.
+`RULES.md` is the **only** copy of the rules every AI agent (Claude Code, Cursor, Codex) follows in
+Celero repos: the git/PR process, testing, and the security rules learned from Oneleet checks and the
+pentest. Agents load it fresh from this repo at the start of every session, so a change here applies
+to every repo as soon as it is merged. No per-repo PRs.
 
 ## Change a rule
-1. Edit `RULES.md` in a PR to this repo. Get it approved and merged.
-2. The workflow `.github/workflows/sync-agent-rules.yml` then opens (or updates) a PR
-   `chore/agent-rules-sync` in every repo in `repos.txt`. Each repo reviews and merges its PR.
-   Without the workflow token, run it by hand: `agents/sync.sh` (or `DRY_RUN=1 agents/sync.sh`).
+One PR to this repo editing `RULES.md`. Once merged, every new agent session in every repo uses it
+(raw.githubusercontent.com may cache for a few minutes).
 
-## Repo-specific rules
-Below the shared block, each repo's `AGENTS.md` has a `## This repo` section (its tests, staging
-checks, deploy notes). Edit that in the repo itself; the sync never touches it. `bootstrap/<repo>.md`
-is only used the first time a repo gets the block.
+## How repos load it
+Each repo has, once:
+- `AGENTS.md`: a pointer to this file (for Cursor, Codex and others: they fetch it with curl before
+  working) plus a `## This repo` section with that repo's own tests, staging checks and deploy notes.
+- `CLAUDE.md`: `@AGENTS.md`.
+- `.claude/settings.json`: a SessionStart hook that downloads `RULES.md` into every Claude Code session:
+  ```json
+  {"hooks": {"SessionStart": [{"hooks": [{"type": "command", "command":
+    "curl -fsSL --max-time 10 https://raw.githubusercontent.com/Celero-io/.github/master/agents/RULES.md || echo 'WARNING: could not load the shared Celero agent rules. Tell the user before doing any work.'"}]}]}}
+  ```
+
+Repo-specific rules (test commands, deploy notes) stay in that repo's `AGENTS.md`.
 
 ## Add a repo
-Add it to `repos.txt` and write `bootstrap/<repo>.md` (its tests of every type and staging checks).
+Copy the pointer section of any repo's `AGENTS.md`, write its `## This repo` section (all its test
+types and staging checks), add `CLAUDE.md` and the hook above.
 
-## Workflow token
-The workflow needs a secret `AGENT_RULES_SYNC_TOKEN`: a GitHub App installation token or a
-fine-grained token with Contents and Pull requests read/write on the repos in `repos.txt`
-(the default GITHUB_TOKEN can't write to other repos). An org admin creates it.
+This repo is public: never put secrets, internal hostnames or credentials in `RULES.md`.

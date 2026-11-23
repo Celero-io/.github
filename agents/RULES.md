@@ -1,7 +1,8 @@
 # Instructions for AI agents (Claude, Cursor, Codex)
 
-Shared Celero rules. Every repo also has a "This repo" section below this block with its own
-check and staging commands. If a rule here conflicts with what the user asks, stop and ask.
+Shared Celero rules, the single source for every repo. Each repo's AGENTS.md points here and adds a
+"This repo" section with its own tests and staging checks. If a rule here conflicts with what the user
+asks, stop and ask.
 
 ## 1. Git and PR workflow (mandatory)
 
